@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes waveform {
+  0% { transform: scaleY(0.3); opacity: 0.5; }
+  100% { transform: scaleY(1); opacity: 1; }
+}
+
+@keyframes contextMenuIn {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+:root {
+  --brand: #075E54;
+  --accent: #25D366;
+}
+
+html[data-color='blue'] { --brand: #0D47A1; --accent: #42A5F5; }
+html[data-color='purple'] { --brand: #4A148C; --accent: #AB47BC; }
+html[data-color='black'] { --brand: #111B21; --accent: #8696A0; }
+html[data-color='green'] { --brand: #1B5E20; --accent: #66BB6A; }
+
+.bg-\[\#075E54\] { background-color: var(--brand); }
+.text-\[\#075E54\] { color: var(--brand); }
+.bg-\[\#25D366\] { background-color: var(--accent); }
+.text-\[\#25D366\] { color: var(--accent); }
+
+.dark { color-scheme: dark; }
+.dark body { background-color: #0b141a; }
+.dark .bg-white { background-color: #1f2c34; }
+.dark .bg-gray-50 { background-color: #1a262d; }
+.dark .bg-gray-100 { background-color: #243239; }
+.dark .bg-gray-200 { background-color: #2a3942; }
+.dark .bg-\[\#F0F2F5\] { background-color: #111b21; }
+.dark .bg-\[\#E5DDD5\] { background-color: #0b141a; }
+.dark .text-gray-900,
+.dark .text-gray-800,
+.dark .text-gray-700 { color: #e9edef; }
+.dark .text-gray-600,
+.dark .text-gray-500 { color: #aebac1; }
+.dark .text-gray-400 { color: #8696a0; }
+.dark .border-gray-100,
+.dark .border-gray-200 { border-color: #2a3942; }
+.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: #2a3942; }
