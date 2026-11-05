@@ -18,7 +18,14 @@ export function ProfilePage({ profile, onSave, onBack }: ProfilePageProps) {
   const [phone, setPhone] = useState(profile.phone);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
-
+  const cleanPhoneNumber = (value: string, code: string) => {
+  let n = value.replace(/[\s\-\.\(\)]/g, '');
+  if (n.startsWith('+')) n = n.slice(1);
+  const codeDigits = code.replace('+', '');
+  if (n.startsWith(codeDigits)) n = n.slice(codeDigits.length);
+  if (n.startsWith('0')) n = n.slice(1);
+  return n.replace(/\D/g, '');
+};
   const dirty =
     name.trim() !== profile.name ||
     status.trim() !== profile.status ||
@@ -43,7 +50,8 @@ export function ProfilePage({ profile, onSave, onBack }: ProfilePageProps) {
       setError('Name cannot be empty.');
       return;
     }
-    onSave({ name: name.trim(), status: status.trim(), countryCode, phone: phone.trim() });
+    const cleanPhone = cleanPhoneNumber(phone, countryCode);
+    onSave({ name: name.trim(), status: status.trim(), countryCode, phone: cleanPhone });
     setError(null);
     setSaved(true);
   };
@@ -104,7 +112,7 @@ export function ProfilePage({ profile, onSave, onBack }: ProfilePageProps) {
             value={phone}
             maxLength={20}
             placeholder="Phone number"
-            onChange={(e) => { setPhone(e.target.value); setSaved(false); }}
+            onChange={(e) => { setPhone(cleanPhoneNumber(e.target.value, countryCode)); setSaved(false); }}
             className="flex-1 min-w-0 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#075E54]"
           />
         </div>
