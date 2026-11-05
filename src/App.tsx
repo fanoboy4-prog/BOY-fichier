@@ -60,7 +60,7 @@ export default function App() {
   const premium = usePremium();
   
   
-    settings: appSettings,
+    const {settings: appSettings,
     updateSettings,
     updateProfile,
     wallpaper,
