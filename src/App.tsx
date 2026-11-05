@@ -40,25 +40,7 @@ interface IncomingCall {
 }
 
 export default function App() {
-    // --- FIX BOUTON RETOUR ANDROID ---
-  useEffect(() => {
-    let lastPress = 0;
-    const listener = CapacitorApp.addListener('backButton', () => {
-      if (showRequests) { setShowRequests(false); return; }
-      if (paywallOpen) { setPaywallOpen(false); return; }
-      if (editingLanguages) { setEditingLanguages(false); return; }
-      if (showSettings) { setShowSettings(false); return; }
-      if (activeChat) { setActiveChat(null as any); return; }
-      if (activeCall) { setActiveCall(null as any); return; }
-      if (incomingCall) { setIncomingCall(null as any); return; }
-      if (tab !== 'chats') { setTab('chats' as any); return; }
-      const now = Date.now();
-      if (now - lastPress < 2000) { CapacitorApp.exitApp(); }
-      else { lastPress = now; setToast({ message: 'Appuyez encore pour quitter', type: 'info' } as any); }
-    });
-    return () => { listener.remove(); };
-  }, [activeChat, activeCall, incomingCall, showSettings, editingLanguages, paywallOpen, showRequests, tab]);
-  // --- FIN FIX ---
+    
   const [tab, setTab] = useState<Tab>('contacts');
   const [activeCall, setActiveCall] = useState<ActiveCall | null>(null);
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
@@ -76,7 +58,8 @@ export default function App() {
   const { logs, addLog, deleteCallLog } = useCallLogs();
   const { settings, isOnboarded, saveSettings } = useLanguageSettings();
   const premium = usePremium();
-  const {
+  
+  
     settings: appSettings,
     updateSettings,
     updateProfile,
@@ -95,6 +78,25 @@ export default function App() {
     const id = window.setInterval(() => touchPresence(myKey, profileName), 5000);
     return () => window.clearInterval(id);
   }, [myKey, profileName]);
+// --- FIX BOUTON RETOUR ANDROID ---
+  useEffect(() => {
+    let lastPress = 0;
+    const listener = CapacitorApp.addListener('backButton', () => {
+      if (showRequests) { setShowRequests(false); return; }
+      if (paywallOpen) { setPaywallOpen(false); return; }
+      if (editingLanguages) { setEditingLanguages(false); return; }
+      if (showSettings) { setShowSettings(false); return; }
+      if (activeChat) { setActiveChat(null as any); return; }
+      if (activeCall) { setActiveCall(null as any); return; }
+      if (incomingCall) { setIncomingCall(null as any); return; }
+      if (tab !== 'chats') { setTab('chats' as any); return; }
+      const now = Date.now();
+      if (now - lastPress < 2000) { CapacitorApp.exitApp(); }
+      else { lastPress = now; setToast({ message: 'Appuyez encore pour quitter', type: 'info' } as any); }
+    });
+    return () => { listener.remove(); };
+  }, [activeChat, activeCall, incomingCall, showSettings, editingLanguages, paywallOpen, showRequests, tab]);
+  // --- FIN FIX ---
 
   useEffect(() => {
     if (!myKey) return;
@@ -178,7 +180,7 @@ export default function App() {
     });
   }, []);
 
-  const startOutgoingCall = (contact: Contact, type: 'voice' | 'video') => {
+  const startOutgoingCall = (contnact: Contact, type: 'voice' | 'video') => {
     setActiveCall({
       contact,
       type,
