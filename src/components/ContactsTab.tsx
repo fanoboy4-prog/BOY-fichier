@@ -21,6 +21,7 @@ interface ContactsTabProps {
   onEdit: (id: string, name: string, phone: string, countryCode: string) => void;
   onCall: (contact: Contact, type: 'voice' | 'video') => void;
   onBlock: (phone: string) => void;
+  onOpenChat: (contact: Contact) => void;
 }
 
 function getInitial(name: string): string {
@@ -43,6 +44,7 @@ export function ContactsTab({
   onEdit,
   onCall,
   onBlock,
+  onOpenChat,
 }: ContactsTabProps) {
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
