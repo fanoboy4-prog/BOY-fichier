@@ -39,11 +39,13 @@ export function ChatsTab({ contacts, onOpenChat, onBlock }: ChatsTabProps) {
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Contact | null>(null);
 
-  const items: ChatListItem[] = contacts.map((contact) => ({
+   const items: ChatListItem[] = contacts
+  .map((contact) => ({
     contact,
     lastMsg: getLastMessage(contact.id),
     meta: metaMap[contact.id] ?? {},
-  }));
+  }))
+  .filter((item) => item.lastMsg !== null);
   const archivedItems = items.filter((i) => i.meta.archived).sort(compareItems);
   const activeItems = items.filter((i) => !i.meta.archived).sort(compareItems);
   const visibleItems = showArchived ? archivedItems : activeItems;
