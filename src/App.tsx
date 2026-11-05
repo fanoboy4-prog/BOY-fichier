@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Languages, Settings } from 'lucide-react';
 import { ContactsTab } from '@/components/ContactsTab';
 import { CallsTab } from '@/components/CallsTab';
@@ -39,6 +40,25 @@ interface IncomingCall {
 }
 
 export default function App() {
+    // --- FIX BOUTON RETOUR ANDROID ---
+  useEffect(() => {
+    let lastPress = 0;
+    const listener = CapacitorApp.addListener('backButton', () => {
+      if (showRequests) { setShowRequests(false); return; }
+      if (paywallOpen) { setPaywallOpen(false); return; }
+      if (editingLanguages) { setEditingLanguages(false); return; }
+      if (showSettings) { setShowSettings(false); return; }
+      if (activeChat) { setActiveChat(null as any); return; }
+      if (activeCall) { setActiveCall(null as any); return; }
+      if (incomingCall) { setIncomingCall(null as any); return; }
+      if (tab !== 'chats') { setTab('chats' as any); return; }
+      const now = Date.now();
+      if (now - lastPress < 2000) { CapacitorApp.exitApp(); }
+      else { lastPress = now; setToast({ message: 'Appuyez encore pour quitter', type: 'info' } as any); }
+    });
+    return () => { listener.remove(); };
+  }, [activeChat, activeCall, incomingCall, showSettings, editingLanguages, paywallOpen, showRequests, tab]);
+  // --- FIN FIX ---
   const [tab, setTab] = useState<Tab>('contacts');
   const [activeCall, setActiveCall] = useState<ActiveCall | null>(null);
   const [incomingCall, setIncomingCall] = useState<IncomingCall | null>(null);
