@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Archive, ArrowLeft, Ban, Mail, MailOpen, MessageCircle, Pin, PinOff, Trash2 } from 'lucide-react';
+import { Archive, ArrowLeft, Ban, Mail, MailOpen, MessageCircle, Pin, PinOff, Trash2, Plus, Search, X } from 'lucide-react';
 import type { Contact } from '@/lib/contacts';
 import { deleteChatHistory, getLastMessage } from '@/lib/chat';
 import type { ChatMessage } from '@/lib/chat';
@@ -38,6 +38,8 @@ export function ChatsTab({ contacts, onOpenChat, onBlock }: ChatsTabProps) {
   const [showArchived, setShowArchived] = useState(false);
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Contact | null>(null);
+  const [showNew, setShowNew] = useState(false);
+  const [newSearch, setNewSearch] = useState('');
 
    const items: ChatListItem[] = contacts
   .map((contact) => ({
@@ -105,7 +107,7 @@ export function ChatsTab({ contacts, onOpenChat, onBlock }: ChatsTabProps) {
   ] : [];
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col  relative h-full bg-white">
       {showArchived ? (
         <div className="flex items-center gap-3 px-3 py-3 bg-[#075E54] flex-shrink-0">
           <button
@@ -191,6 +193,51 @@ export function ChatsTab({ contacts, onOpenChat, onBlock }: ChatsTabProps) {
             </div>
           </div>
         </>
+      )}
+          {/* BOUTON (+) BORIBORY */}
+      <button
+        onClick={() => setShowNew(true)}
+        className="absolute bottom-6 right-6 w-14 h-14 rounded-full bg-[#00a884] text-white flex items-center justify-center shadow-lg shadow-black/30 active:scale-95 z-20"
+      >
+        <Plus size={28} />
+      </button>
+
+      {/* POPUP NEW MESSAGE */}
+      {showNew && (
+        <div className="absolute inset-0 z-30 bg-black/50 flex items-end sm:items-center justify-center" onClick={() => setShowNew(false)}>
+          <div className="bg-[#111b21] w-full max-w-md max-h-[85%] rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 px-4 py-4 border-b border-white/10">
+              <button onClick={() => setShowNew(false)}><X size={22} className="text-white" /></button>
+              <h3 className="text-white font-semibold text-lg">New message</h3>
+            </div>
+            <div className="flex items-center gap-2 mx-4 mt-3 bg-[#202c33] rounded-full px-4 py-2">
+              <Search size={18} className="text-[#8696a0]" />
+              <input
+                value={newSearch}
+                onChange={(e) => setNewSearch(e.target.value)}
+                placeholder="Search contacts..."
+                className="bg-transparent outline-none text-white text-sm w-full placeholder:text-[#8696a0]"
+              />
+            </div>
+            <div className="overflow-y-auto py-2 flex-1">
+              {contacts.filter((c) => c.name.toLowerCase().includes(newSearch.toLowerCase())).map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => { setShowNew(false); setNewSearch(''); onOpenChat(c.id); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 active:bg-white/5"
+                >
+                  <div className="w-11 h-11 rounded-full bg-[#00a884] flex items-center justify-center text-white font-bold">
+                    {c.name.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-white text-[15px]">{c.name}</span>
+                </button>
+              ))}
+              {contacts.filter((c) => c.name.toLowerCase().includes(newSearch.toLowerCase())).length === 0 && (
+                <p className="text-center text-[#8696a0] text-sm py-6">No contacts found</p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
