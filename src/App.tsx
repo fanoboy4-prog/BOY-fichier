@@ -396,6 +396,7 @@ export default function App() {
             onEdit={editContact}
             onCall={startOutgoingCall}
             onBlock={blockNumber}
+            onOpenChat={(c) => setActiveChat(c)}
           />
         )}
         {tab === 'calls' && <CallsTab logs={logs} onCall={handleRedial} onDelete={deleteCallLog} />}
