@@ -197,6 +197,7 @@ export function ContactsTab({
                 countryDial={c.dial}
                 status={statusOf(contact)}
                 onCall={onCall}
+                onOpenChat={onOpenChat}
                 onLongPress={(e) => handleOpenMenu(contact, e)}
               />
             );
@@ -386,6 +387,7 @@ function ContactRow({
   countryDial,
   status,
   onCall,
+  onOpenChat,
   onLongPress,
 }: {
   contact: Contact;
@@ -393,6 +395,7 @@ function ContactRow({
   countryDial: string;
   status?: RequestStatus;
   onCall: (contact: Contact, type: 'voice' | 'video') => void;
+  onOpenChat: (contact: Contact) => void;
   onLongPress: (e: React.TouchEvent | React.MouseEvent) => void;
 }) {
   const { isPressing, handlers } = useLongPress({
@@ -421,6 +424,14 @@ function ContactRow({
       </div>
       <div className="flex items-center gap-1 flex-shrink-0">
         <button
+        
+        onClick={(e) => { e.stopPropagation(); onOpenChat(contact); }}
+        className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100"
+        aria-label="Open chat"
+      >
+        <MessageSquare className="w-5 h-5" />
+      </button>
+              <button
           onClick={(e) => { e.stopPropagation(); onCall(contact, 'voice'); }}
           className="w-10 h-10 rounded-full flex items-center justify-center text-[#25D366] hover:bg-[#25D366]/10 transition-colors"
           aria-label="Voice call"
