@@ -1,8 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-
+const supabaseUrl = 'https://nqjunlfmjhladiivvhoy.supabase.co';
+const supabaseAnonKey = 'sb_publishable_-ASIkM69oPIN9IRIkuXxFg_M6NXmhIB';
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export interface TranslationRecord {
