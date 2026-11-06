@@ -1,66 +1,44 @@
-export type RequestStatus = 'pending' | 'accepted' | 'declined' | 'cancelled';
-
-export interface ContactRequest {
-  id: string;
-  fromKey: string;
-  fromName: string;
-  fromPhone: string;
-  fromCountryCode: string;
-  toKey: string;
-  toName: string;
-  toPhone: string;
-  toCountryCode: string;
-  status: RequestStatus;
-  invitationMessage?: string;
-  createdAt: number;
-}
-
-// --- ITO NO TSY HITA TEO - AVERIKO ---
-export const REQUEST_STATUS_LABEL: Record<RequestStatus, string> = {
-  pending: 'En attente',
-  accepted: 'Acceptée',
-  declined: 'Refusée',
-  cancelled: 'Annulée',
-};
-export const REQUEST_STATUS_LABELS = REQUEST_STATUS_LABEL;
-
-const KEY = 'live-translation-requests';
-const PRESENCE_KEY = 'live-translation-presence';
-
-export function loadRequests(): ContactRequest[] {
-  try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; }
-}
-function saveRequests(list: ContactRequest[]) {
-  localStorage.setItem(KEY, JSON.stringify(list));
-  window.dispatchEvent(new Event('requests-changed'));
-}
-export function saveRequest(r: ContactRequest) {
-  const list = loadRequests();
-  list.push(r);
-  saveRequests(list);
-  return r;
-}
-export function updateRequestStatus(id: string, status: RequestStatus) {
-  const list = loadRequests().map(r => r.id === id ? { ...r, status } : r);
-  saveRequests(list);
-}
-export function cancelRequestById(id: string) {
-  updateRequestStatus(id, 'cancelled');
-}
-export function updateInvitationMessage(id: string, msg: string) {
-  const list = loadRequests().map(r => r.id === id ? { ...r, invitationMessage: msg } : r);
-  saveRequests(list);
-}
-export function touchPresence(myKey: string, name: string) {
-  try {
-    const all = JSON.parse(localStorage.getItem(PRESENCE_KEY) || '{}');
-    all[myKey] = { name, lastSeen: Date.now() };
-    localStorage.setItem(PRESENCE_KEY, JSON.stringify(all));
-  } catch {}
-}
-export function isPeerOnline(key: string) {
-  try {
-    const all = JSON.parse(localStorage.getItem(PRESENCE_KEY) || '{}');
-    return all[key] && Date.now() - all[key].lastSeen < 15000;
-  } catch { return false; }
-      }
+import { useState } from 'react';
+import type { ContactRequest } from '@/lib/contactRequests';
+interface Props { requests: ContactRequest[]; myKey: string; onAccept: (r: ContactRequest) => void; onDecline: (r: ContactRequest) => void; onCancel?: (r: ContactRequest) => void; onBack: () => void; }
+export function ContactRequestsScreen({ requests, myKey, onAccept, onDecline, onCancel, onBack }: Props) {
+  const [tab, setTab] = useState<'received' | 'sent'>('received');
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const [openBox, setOpenBox] = useState<string | null>(null);
+  const received = requests.filter(r => r.toKey === myKey && r.status === 'pending');
+  const sent = requests.filter(r => r.fromKey === myKey && r.status === 'pending');
+  const saveMsg = (r: ContactRequest) => {
+    const m = (draft[r.id] || '').trim(); if (!m) return;
+    const list = JSON.parse(localStorage.getItem('live-translation-requests') || '[]');
+    const upd = list.map((x: any) => x.id === r.id ? { ...x, invitationMessage: m } : x);
+    localStorage.setItem('live-translation-requests', JSON.stringify(upd));
+    window.dispatchEvent(new Event('requests-changed')); setOpenBox(null);
+  };
+  return (
+    <div className="h-[100dvh] flex flex-col bg-white max-w-md mx-auto">
+      <div className="bg-[#075E54] px-4 py-3 flex items-center gap-3"><button onClick={onBack} className="text-white text-xl">←</button><h1 className="text-white font-bold text-lg">Demandes</h1></div>
+      <div className="flex border-b">
+        <button onClick={() => setTab('received')} className={`flex-1 py-3 font-semibold ${tab === 'received' ? 'text-[#075E54] border-b-2 border-[#075E54]' : 'text-gray-500'}`}>REÇUES ({received.length})</button>
+        <button onClick={() => setTab('sent')} className={`flex-1 py-3 font-semibold ${tab === 'sent' ? 'text-[#075E54] border-b-2 border-[#075E54]' : 'text-gray-500'}`}>ENVOYÉES ({sent.length})</button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {tab === 'received' && received.length === 0 && <p className="text-center text-gray-400 mt-10">Aucune demande reçue</p>}
+        {tab === 'received' && received.map(r => (
+          <div key={r.id} className="border rounded-xl p-3">
+            <p className="font-bold">{r.fromName}</p><p className="text-sm text-gray-500">{r.fromCountryCode} {r.fromPhone}</p>
+            {r.invitationMessage && <div className="mt-2 bg-green-50 border border-green-200 rounded-lg p-2 text-sm">💬 <i>"{r.invitationMessage}"</i></div>}
+            <div className="flex gap-2 mt-3"><button onClick={() => onAccept(r)} className="flex-1 bg-[#25D366] text-white py-2 rounded-lg font-semibold">Accepter</button><button onClick={() => onDecline(r)} className="flex-1 bg-gray-200 py-2 rounded-lg font-semibold">Refuser</button></div>
+          </div>
+        ))}
+        {tab === 'sent' && sent.length === 0 && <p className="text-center text-gray-400 mt-10">Aucune demande envoyée</p>}
+        {tab === 'sent' && sent.map(r => (
+          <div key={r.id} className="border rounded-xl p-3">
+            <p className="font-bold">{r.toName}</p><p className="text-sm text-gray-500">{r.toCountryCode} {r.toPhone} • En attente</p>
+            {r.invitationMessage && <div className="mt-2 bg-blue-50 rounded-lg p-2 text-sm">💬 Vous: "{r.invitationMessage}"</div>}
+            {openBox === r.id ? (<div className="mt-2 flex gap-2"><input autoFocus value={draft[r.id] || ''} onChange={e => setDraft({ ...draft, [r.id]: e.target.value })} placeholder="Salut, c'est moi..." className="flex-1 border rounded-lg px-2 py-2 text-sm" /><button onClick={() => saveMsg(r)} className="bg-[#075E54] text-white px-3 rounded-lg text-sm">Envoyer</button></div>) : (<div className="flex gap-2 mt-3"><button onClick={() => setOpenBox(r.id)} className="flex-1 bg-[#075E54] text-white py-2 rounded-lg font-semibold text-sm">💬 Envoyer message</button><button onClick={() => { if (confirm('Annuler cette demande ?')) onCancel?.(r); }} className="flex-1 bg-red-100 text-red-600 py-2 rounded-lg font-semibold text-sm">❌ Annuler</button></div>)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+    }
