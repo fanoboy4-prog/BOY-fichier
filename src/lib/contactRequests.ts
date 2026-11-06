@@ -1,6 +1,7 @@
-export type RequestStatus = 'pending' | 'accepted' | 'declined';
+export type RequestStatus = 'pending' | 'accepted' | 'declined' | 'cancelled';
 
-export interface NewContactRequest {
+export interface ContactRequest {
+  id: string;
   fromKey: string;
   fromName: string;
   fromPhone: string;
@@ -9,102 +10,48 @@ export interface NewContactRequest {
   toName: string;
   toPhone: string;
   toCountryCode: string;
-}
-
-export interface ContactRequest extends NewContactRequest {
-  id: string;
   status: RequestStatus;
+  invitationMessage?: string;
   createdAt: number;
-  updatedAt: number;
 }
 
-export const REQUEST_STATUS_LABEL: Record<RequestStatus, string> = {
-  pending: 'En attente',
-  accepted: 'Accepté',
-  declined: 'Refusé',
-};
-
-const REQUESTS_KEY = 'lt_contact_requests';
-const PRESENCE_KEY = 'lt_presence';
-const PRESENCE_TTL_MS = 15000;
-
-type Presence = Record<string, { name: string; lastSeen: number }>;
-
-function readRaw(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function writeRaw(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // storage may be full or unavailable
-  }
-}
-
-function parseRequests(raw: string | null): ContactRequest[] {
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as ContactRequest[];
-  } catch {
-    return [];
-  }
-}
-
-function parsePresence(raw: string | null): Presence {
-  if (!raw) return {};
-  try {
-    return JSON.parse(raw) as Presence;
-  } catch {
-    return {};
-  }
-}
+const KEY = 'live-translation-requests';
+const PRESENCE_KEY = 'live-translation-presence';
 
 export function loadRequests(): ContactRequest[] {
-  return parseRequests(readRaw(REQUESTS_KEY));
+  try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; }
 }
-
-export function subscribeRequests(handler: (requests: ContactRequest[]) => void): () => void {
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === REQUESTS_KEY) handler(parseRequests(event.newValue));
-  };
-  window.addEventListener('storage', onStorage);
-  return () => window.removeEventListener('storage', onStorage);
+function saveRequests(list: ContactRequest[]) {
+  localStorage.setItem(KEY, JSON.stringify(list));
+  window.dispatchEvent(new Event('requests-changed'));
 }
-
-export function createRequest(input: NewContactRequest): ContactRequest {
-  const now = Date.now();
-  const request: ContactRequest = {
-    ...input,
-    id: `${now}-${Math.random().toString(36).slice(2, 9)}`,
-    status: 'pending',
-    createdAt: now,
-    updatedAt: now,
-  };
-  writeRaw(REQUESTS_KEY, JSON.stringify([request, ...loadRequests()]));
-  return request;
+export function saveRequest(r: ContactRequest) {
+  const list = loadRequests();
+  list.push(r);
+  saveRequests(list);
+  return r;
 }
-
-export function setRequestStatus(id: string, status: RequestStatus): void {
-  const next = loadRequests().map((r) => (r.id === id ? { ...r, status, updatedAt: Date.now() } : r));
-  writeRaw(REQUESTS_KEY, JSON.stringify(next));
+export function updateRequestStatus(id: string, status: RequestStatus) {
+  const list = loadRequests().map(r => r.id === id ? { ...r, status } : r);
+  saveRequests(list);
 }
-
-export function touchPresence(key: string, name: string): void {
-  const now = Date.now();
-  const presence = parsePresence(readRaw(PRESENCE_KEY));
-  for (const other of Object.keys(presence)) {
-    if (now - presence[other].lastSeen > PRESENCE_TTL_MS) delete presence[other];
-  }
-  presence[key] = { name, lastSeen: now };
-  writeRaw(PRESENCE_KEY, JSON.stringify(presence));
+export function cancelRequestById(id: string) {
+  updateRequestStatus(id, 'cancelled');
 }
-
-export function isPeerOnline(key: string): boolean {
-  const entry = parsePresence(readRaw(PRESENCE_KEY))[key];
-  return entry !== undefined && Date.now() - entry.lastSeen <= PRESENCE_TTL_MS;
+export function updateInvitationMessage(id: string, msg: string) {
+  const list = loadRequests().map(r => r.id === id ? { ...r, invitationMessage: msg } : r);
+  saveRequests(list);
+}
+export function touchPresence(myKey: string, name: string) {
+  try {
+    const all = JSON.parse(localStorage.getItem(PRESENCE_KEY) || '{}');
+    all[myKey] = { name, lastSeen: Date.now() };
+    localStorage.setItem(PRESENCE_KEY, JSON.stringify(all));
+  } catch {}
+}
+export function isPeerOnline(key: string) {
+  try {
+    const all = JSON.parse(localStorage.getItem(PRESENCE_KEY) || '{}');
+    return all[key] && Date.now() - all[key].lastSeen < 15000;
+  } catch { return false; }
 }
