@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Contact, CallLogEntry } from '@/lib/contacts';
-
+import { supabase } from '../lib/supabase';
 const CONTACTS_KEY = 'lt_contacts';
 const CALLS_KEY = 'lt_call_logs';
 
@@ -42,7 +42,7 @@ export function useContacts() {
 
   const addContact = useCallback((name: string, phone: string, countryCode: string, requestId?: string) => {
     const contact: Contact = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+      id: de`${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       name: name.trim(),
       phone: phone.trim(),
       countryCode,
@@ -50,6 +50,7 @@ export function useContacts() {
       ...(requestId ? { requestId } : {}),
     };
     setContacts((prev) => [...prev, contact].sort((a, b) => a.name.localeCompare(b.name)));
+    supabase.from('contacts').insert({ id: contact.id, name: contact.name, phone: contact.phone, country_code: contact.countryCode, created_at: contact.createdAt }).then(() => {});
     return contact;
   }, []);
 
