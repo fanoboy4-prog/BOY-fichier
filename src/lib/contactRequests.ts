@@ -15,6 +15,15 @@ export interface ContactRequest {
   createdAt: number;
 }
 
+// --- ITO NO TSY HITA TEO - AVERIKO ---
+export const REQUEST_STATUS_LABEL: Record<RequestStatus, string> = {
+  pending: 'En attente',
+  accepted: 'Acceptée',
+  declined: 'Refusée',
+  cancelled: 'Annulée',
+};
+export const REQUEST_STATUS_LABELS = REQUEST_STATUS_LABEL;
+
 const KEY = 'live-translation-requests';
 const PRESENCE_KEY = 'live-translation-presence';
 
@@ -54,4 +63,4 @@ export function isPeerOnline(key: string) {
     const all = JSON.parse(localStorage.getItem(PRESENCE_KEY) || '{}');
     return all[key] && Date.now() - all[key].lastSeen < 15000;
   } catch { return false; }
-}
+      }
