@@ -72,3 +72,7 @@ export function ContactRequestsScreen({ requests, myKey, onAccept, onDecline, on
     </div>
   );
                                                                                        }
+export function RequestStatusBadge({ status }: { status: string }) {
+  const label = status === 'pending' ? 'En attente' : status === 'accepted' ? 'Acceptée' : status === 'declined' ? 'Refusée' : 'Annulée';
+  return <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{label}</span>;
+}
