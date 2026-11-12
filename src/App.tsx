@@ -126,7 +126,7 @@ export default function App() {
     const toKey = phoneKey(countryCode, phone);
     if (!toKey) return 'Entrez un numéro valide.';
     if (toKey === myKey) return 'Vous ne pouvez pas vous ajouter vous-même.';
-if (requests.some((r) => r.fromKey === myKey && r.toKey === toKey && r.status === 'pending')) {
+    if (requests.some((r) => r.fromKey === myKey && r.toKey === toKey && r.status !== 'declined')) {
       return 'Une demande existe déjà pour ce numéro.';
     }
     const request = sendRequest({
@@ -408,4 +408,4 @@ if (requests.some((r) => r.fromKey === myKey && r.toKey === toKey && r.status ==
       {toast && <Toast message={toast} onDismiss={() => setToast(null)} />}
     </div>
   );
-}
+    }
